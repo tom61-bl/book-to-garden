@@ -223,7 +223,7 @@ TEMPLATE = r"""<!DOCTYPE html>
   .nav a.active{color:var(--ink);border-bottom-color:var(--pink)}
   .review-btn{margin-top:24px;padding:13px 0;text-align:center;background:var(--lemon);color:var(--ink);text-decoration:none;font-size:11px;letter-spacing:2px;text-transform:uppercase;font-weight:500;transition:.25s}
   .review-btn:hover{background:var(--ink);color:var(--paper)}
-  .content{flex:1;padding:72px 6vw;max-width:1180px;margin:0 auto;width:100%}
+  .content{flex:1;padding:72px 6vw;max-width:none}
   .book-head{margin-bottom:56px}
   .book-head .author{font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--ink-soft);margin-bottom:18px}
   .book-head h1{font-family:var(--serif);font-size:52px;line-height:1.05;font-weight:500;letter-spacing:-.01em}
