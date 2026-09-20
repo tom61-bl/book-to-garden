@@ -177,7 +177,7 @@ show(BOOKS[0].id);
 </html>
 """
 
-payload = html.escape(json.dumps(books, ensure_ascii=False))
+payload = json.dumps(books, ensure_ascii=False).replace("</", "<\\/")
 out = TEMPLATE.replace("__BOOKS__", payload)
 OUT.mkdir(parents=True, exist_ok=True)
 (OUT / "notes.html").write_text(out, encoding="utf-8")
