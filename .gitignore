@@ -1,0 +1,13 @@
+# 构建产物与依赖
+node_modules/
+quartz/public/
+quartz/.quartz-cache/
+tools/out/
+.preview/
+
+# 系统/编辑器
+.DS_Store
+Thumbs.db
+*.log
+.vscode/
+.idea/
