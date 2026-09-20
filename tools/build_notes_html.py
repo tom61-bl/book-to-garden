@@ -52,7 +52,8 @@ def render_md(md):
             text = inline(" ".join(x for x in buf if x))
             label = {"summary": "精华", "quote": "金句", "tip": "提示", "note": "笔记"}[kind]
             cls = "callout " + ("callout-quote" if kind == "quote" else "callout-summary")
-            out.append(f'<div class="{cls}"><span class="callout-label">{label}</span><p>{text}</p></div>')
+            qmark = '<div class="qmark">&#8220;</div>' if kind == "quote" else ""
+            out.append(f'<div class="{cls}"><span class="callout-label">{label}</span>{qmark}<p>{text}</p></div>')
             i += 1; continue
         if line.startswith("### "):
             close_ul(); close_concept()
@@ -99,49 +100,52 @@ TEMPLATE = r"""<!DOCTYPE html>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Reading Journal</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Work+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
   :root{
-    --bg:#f7f4ee; --ink:#1a1a1a; --sub:#8c867c; --line:#ddd7cb;
-    --serif:"Playfair Display","Noto Serif SC",Georgia,serif;
-    --sans:"Inter","PingFang SC","Microsoft YaHei",sans-serif;
+    --paper:#F2EEDF; --paper-2:#ECE6D2; --ink:#2A241B; --ink-soft:#5C5345;
+    --pink:#E1A4C2; --lemon:#D6DD63; --blush:#E8C9B6; --sage:#B7C7A8;
+    --serif:"Cormorant Garamond","Noto Serif SC",Georgia,serif;
+    --sans:"Work Sans","PingFang SC","Microsoft YaHei",sans-serif;
   }
   *{box-sizing:border-box;margin:0;padding:0}
-  body{font-family:var(--sans);background:var(--bg);color:var(--ink);font-weight:300;-webkit-font-smoothing:antialiased}
+  body{font-family:var(--sans);background:var(--paper);color:var(--ink);font-weight:300;-webkit-font-smoothing:antialiased}
   .app{display:flex;min-height:100vh}
-  /* sidebar */
-  .sidebar{width:240px;flex-shrink:0;border-right:1px solid var(--line);padding:48px 32px;position:sticky;top:0;height:100vh;display:flex;flex-direction:column}
-  .brand{font-family:var(--serif);font-size:22px;letter-spacing:.5px}
-  .brand small{display:block;font-family:var(--sans);font-size:10px;letter:3px;text-transform:uppercase;color:var(--sub);margin-top:8px}
-  .rule{height:1px;background:var(--line);margin:28px 0}
+  .sidebar{width:260px;flex-shrink:0;border-right:1px solid rgba(42,36,27,.15);padding:48px 32px;position:sticky;top:0;height:100vh;display:flex;flex-direction:column;background:var(--paper)}
+  .brand{font-family:var(--serif);font-size:28px;font-weight:500;line-height:1}
+  .brand small{display:block;font-family:var(--sans);font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--ink-soft);margin-top:10px}
+  .swatches{display:flex;gap:8px;margin-top:20px}
+  .swatches i{width:18px;height:18px;border-radius:50%;display:block}
+  .rule{height:1px;background:rgba(42,36,27,.2);margin:28px 0}
   .nav{display:flex;flex-direction:column;gap:2px;overflow:auto;flex:1}
-  .nav a{padding:8px 0;color:var(--sub);text-decoration:none;font-size:13px;letter-spacing:.5px;cursor:pointer;border-bottom:1px solid transparent;transition:.2s}
+  .nav a{padding:9px 0;color:var(--ink-soft);text-decoration:none;font-size:13px;letter-spacing:.3px;cursor:pointer;border-bottom:1px solid transparent;transition:.2s;font-family:var(--serif);font-size:16px}
   .nav a:hover{color:var(--ink)}
-  .nav a.active{color:var(--ink);border-bottom-color:var(--ink)}
-  .review-btn{margin-top:24px;padding:13px 0;text-align:center;border:1px solid var(--ink);color:var(--ink);text-decoration:none;font-size:11px;letter-spacing:2px;text-transform:uppercase;transition:.25s}
-  .review-btn:hover{background:var(--ink);color:var(--bg)}
-  /* content */
-  .content{flex:1;padding:72px 12vw;max-width:880px}
-  .book-head{margin-bottom:64px}
-  .book-head .author{font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--sub);margin-bottom:18px}
-  .book-head h1{font-family:var(--serif);font-size:42px;line-height:1.25;font-weight:600}
-  .book-head .meta-line{height:1px;background:var(--ink);width:60px;margin-top:32px}
-  .content h2{font-family:var(--serif);font-size:24px;font-weight:600;margin:56px 0 22px}
-  .content p{font-size:16px;line-height:2;color:#2c2c2c;margin:18px 0}
+  .nav a.active{color:var(--ink);border-bottom-color:var(--pink)}
+  .review-btn{margin-top:24px;padding:13px 0;text-align:center;background:var(--lemon);color:var(--ink);text-decoration:none;font-size:11px;letter-spacing:2px;text-transform:uppercase;font-weight:500;transition:.25s}
+  .review-btn:hover{background:var(--ink);color:var(--paper)}
+  .content{flex:1;padding:72px 10vw;max-width:860px}
+  .book-head{margin-bottom:56px}
+  .book-head .author{font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--ink-soft);margin-bottom:18px}
+  .book-head h1{font-family:var(--serif);font-size:52px;line-height:1.05;font-weight:500;letter-spacing:-.01em}
+  .book-head .meta-line{height:3px;width:80px;background:var(--pink);margin-top:28px}
+  .content h2{font-family:var(--serif);font-size:30px;font-weight:600;margin:56px 0 22px}
+  .content p{font-size:16px;line-height:1.95;color:var(--ink);margin:18px 0}
+  .content p:first-of-type::first-letter{font-family:var(--serif);font-size:68px;float:left;line-height:.85;padding:6px 12px 0 0;font-weight:500}
   .content ul{margin:18px 0;list-style:none}
-  .content li{font-size:15.5px;line-height:2;color:#2c2c2c;padding:8px 0 8px 24px;position:relative;border-bottom:1px solid #efece4}
-  .content li:before{content:"—";position:absolute;left:0;color:var(--sub)}
-  .concept{margin:32px 0;padding:28px 0;border-top:1px solid var(--line)}
-  .concept-tag{font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--sub)}
-  .concept h3{font-family:var(--serif);font-size:20px;font-weight:600;margin:10px 0 14px}
-  .concept p{margin:8px 0;font-size:15.5px;line-height:1.95}
-  .callout{margin:44px 0;padding:36px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
-  .callout-label{font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--sub)}
-  .callout-summary p{font-family:var(--serif);font-size:19px;line-height:1.7;margin:14px 0 0;font-style:italic}
-  .callout-quote{text-align:center}
-  .callout-quote p{font-family:var(--serif);font-size:26px;line-height:1.6;font-style:italic;margin:20px 0 0;color:var(--ink)}
-  strong{font-weight:500}
-  @media(max-width:760px){.sidebar{display:none}.content{padding:48px 28px}.book-head h1{font-size:32px}}
+  .content li{font-size:15px;line-height:1.9;color:var(--ink);padding:10px 0 10px 24px;position:relative;border-bottom:1px dashed rgba(42,36,27,.2)}
+  .content li:before{content:"—";position:absolute;left:0;color:var(--pink)}
+  .concept{background:rgba(255,255,255,.55);border-radius:18px;padding:28px 32px;margin:24px 0}
+  .concept-tag{font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--ink-soft)}
+  .concept h3{font-family:var(--serif);font-size:22px;font-weight:600;margin:10px 0 12px}
+  .concept p{margin:6px 0;font-size:15.5px;line-height:1.85}
+  .callout{margin:48px 0;padding:40px;text-align:center;position:relative}
+  .callout-label{font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--ink-soft)}
+  .callout-summary p{font-family:var(--serif);font-size:22px;line-height:1.6;margin:18px 0 0;font-style:italic;color:var(--ink)}
+  .callout-quote{border-top:1px solid rgba(42,36,27,.2);border-bottom:1px solid rgba(42,36,27,.2)}
+  .callout-quote .qmark{font-family:var(--serif);font-size:80px;line-height:.4;color:var(--blush);margin-bottom:18px}
+  .callout-quote p{font-family:var(--serif);font-size:32px;line-height:1.35;font-weight:500;font-style:italic;margin:0;color:var(--ink)}
+  strong{font-weight:600;color:var(--ink)}
+  @media(max-width:760px){.sidebar{display:none}.content{padding:48px 24px}.book-head h1{font-size:36px}}
 </style>
 </head>
 <body>
