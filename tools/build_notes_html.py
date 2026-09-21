@@ -187,8 +187,14 @@ for b in books:
         quiz_items.append({"q": c["front"], "a": ans})
     rng.shuffle(quiz_items)
     b["quiz_pool"] = quiz_items[:8]
-    # 整本书末尾的总小测
-    b["quiz"] = quiz_items[:3]
+    # 整本书末尾的总小测（需要 opts 字段供 quizHtml 渲染选项）
+    final_quiz = []
+    for item in quiz_items[:3]:
+        wrong = rng.sample([f for f in all_fronts if f != item["q"]], min(3, len(all_fronts)-1))
+        opts = [item["a"]] + wrong
+        rng.shuffle(opts)
+        final_quiz.append({"q": item["q"], "a": item["a"], "opts": opts})
+    b["quiz"] = final_quiz
 
 # 第二遍渲染：每本书注入自己的 section_quiz 工厂
 for b in books:
