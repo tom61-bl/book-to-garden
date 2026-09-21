@@ -1,0 +1,872 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>知识花园 · 读书笔记互动平台</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#FAF8F3;--paper-2:#F2EEE4;--ink:#1A1A1A;--ink-soft:#6B6B6B;--ink-faint:#A8A295;
+  --accent:#E8652A;--accent-light:#FDF0E8;--border:#E5E0D5;--sage:#4A9E5C;--pink:#D4574A;--lemon:#E8B923;
+  --serif:"Cormorant Garamond","Noto Serif SC",Georgia,serif;--sans:"Inter","PingFang SC","Microsoft YaHei",sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--sans);background:var(--paper);color:var(--ink);font-weight:400;-webkit-font-smoothing:antialiased;line-height:1.6}
+a{color:inherit;text-decoration:none}button{font-family:var(--sans);cursor:pointer;border:none;background:none;color:inherit}
+.topbar{position:sticky;top:0;z-index:100;background:rgba(250,248,243,.92);backdrop-filter:blur(12px);border-bottom:1px solid var(--border)}
+.topbar-inner{max-width:1200px;margin:0 auto;padding:0 32px;height:64px;display:flex;align-items:center;gap:24px}
+.logo{font-family:var(--serif);font-size:22px;font-weight:600;white-space:nowrap}.logo span{color:var(--accent)}
+.nav-links{display:flex;gap:4px;flex:1}
+.nav-links a{padding:8px 14px;font-size:14px;color:var(--ink-soft);border-radius:8px;transition:.15s;white-space:nowrap}
+.nav-links a:hover{color:var(--ink);background:var(--paper-2)}.nav-links a.active{color:var(--accent);background:var(--accent-light);font-weight:500}
+.search-box{position:relative;flex:0 0 220px}
+.search-box input{width:100%;padding:9px 14px 9px 36px;border:1px solid var(--border);border-radius:10px;font-size:13px;background:#fff;outline:none}
+.search-box input:focus{border-color:var(--accent)}
+.search-box::before{content:"⌕";position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:16px;color:var(--ink-faint)}
+.search-results{position:absolute;top:calc(100% + 6px);left:0;right:0;background:#fff;border:1px solid var(--border);border-radius:10px;box-shadow:0 8px 32px rgba(0,0,0,.1);max-height:320px;overflow-y:auto;display:none;z-index:200}
+.search-results.show{display:block}
+.search-results a{display:block;padding:12px 16px;border-bottom:1px solid var(--border);font-size:13px}
+.search-results a:last-child{border-bottom:none}.search-results a:hover{background:var(--accent-light)}
+.search-results .sr-title{font-weight:500}.search-results .sr-sub{font-size:11px;color:var(--ink-faint);margin-top:2px}
+.page{max-width:1200px;margin:0 auto;padding:48px 32px 96px}.view{display:none}.view.active{display:block}
+
+/* 首页：书墙 */
+.hero{padding:48px 0 32px}
+.hero-eyebrow{font-size:12px;letter-spacing:3px;text-transform:uppercase;color:var(--accent);font-weight:600;margin-bottom:16px}
+.hero h1{font-family:var(--serif);font-size:56px;line-height:1.05;font-weight:600;letter-spacing:-.02em}
+.hero h1 em{font-style:italic;color:var(--accent)}
+.hero-sub{font-size:17px;color:var(--ink-soft);max-width:580px;margin-top:16px;line-height:1.7}
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--border);border:1px solid var(--border);border-radius:14px;overflow:hidden;margin:36px 0}
+.stat{background:var(--paper);padding:22px 20px}
+.stat-num{font-family:var(--serif);font-size:36px;font-weight:600;line-height:1}
+.stat-num small{font-size:16px;color:var(--ink-faint)}
+.stat-label{font-size:11px;color:var(--ink-soft);margin-top:8px;letter-spacing:.5px}
+.section-title{font-family:var(--serif);font-size:30px;font-weight:600;margin:48px 0 6px}
+.section-sub{font-size:14px;color:var(--ink-soft);margin-bottom:24px}
+.book-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:20px}
+.book-card{background:#fff;border:1px solid var(--border);border-radius:16px;padding:28px;cursor:pointer;transition:.2s;position:relative;overflow:hidden}
+.book-card:hover{border-color:var(--accent);transform:translateY(-3px);box-shadow:0 12px 32px rgba(0,0,0,.06)}
+.book-card .bc-num{font-family:var(--serif);font-size:14px;color:var(--ink-faint);font-weight:600}
+.book-card .bc-title{font-family:var(--serif);font-size:24px;font-weight:600;margin:8px 0 4px;line-height:1.2}
+.book-card .bc-en{font-size:12px;color:var(--ink-faint);font-style:italic;margin-bottom:14px}
+.book-card .bc-summary{font-size:13px;color:var(--ink-soft);line-height:1.6;margin-bottom:16px}
+.book-card .bc-meta{display:flex;gap:12px;font-size:11px;color:var(--ink-faint);flex-wrap:wrap}
+.book-card .bc-meta span{background:var(--paper-2);padding:3px 10px;border-radius:20px}
+.book-card .bc-arrow{position:absolute;top:24px;right:24px;font-size:20px;color:var(--ink-faint);transition:.2s}
+.book-card:hover .bc-arrow{color:var(--accent);transform:translateX(3px)}
+
+/* 书内页通用 */
+.breadcrumb{font-size:12px;color:var(--ink-faint);margin-bottom:20px}
+.breadcrumb a{color:var(--ink-soft)}.breadcrumb a:hover{color:var(--accent)}
+.book-hero{padding:16px 0 32px}
+.book-hero .bh-eyebrow{font-size:12px;letter-spacing:2px;text-transform:uppercase;color:var(--accent);font-weight:600;margin-bottom:12px}
+.book-hero h1{font-family:var(--serif);font-size:44px;font-weight:600;line-height:1.1;letter-spacing:-.01em}
+.book-hero h1 em{font-style:italic;color:var(--accent)}
+.book-hero .bh-sub{font-size:15px;color:var(--ink-soft);max-width:600px;margin-top:14px;line-height:1.7}
+.book-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--border);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin:28px 0}
+.book-stats .stat{padding:18px 16px}
+.book-stats .stat-num{font-size:28px}
+
+/* 概念表 */
+.concept-table{width:100%;border-collapse:collapse;background:#fff;border:1px solid var(--border);border-radius:12px;overflow:hidden}
+.concept-table th{text-align:left;padding:13px 18px;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--ink-faint);font-weight:600;border-bottom:1px solid var(--border);background:var(--paper-2)}
+.concept-table td{padding:14px 18px;border-bottom:1px solid var(--border);font-size:14px}
+.concept-table tr:last-child td{border-bottom:none}.concept-table tr:hover{background:var(--accent-light)}
+.concept-table .c-num{font-family:var(--serif);font-size:16px;font-weight:600;color:var(--ink-faint);width:44px}
+.concept-table .c-name{font-weight:500}.concept-table .c-name small{display:block;font-size:11px;color:var(--ink-faint);font-weight:400;margin-top:2px}
+.concept-table .c-cat{font-size:12px;color:var(--ink-soft)}.concept-table .c-links{font-size:12px;color:var(--ink-faint)}
+.stars{color:var(--lemon);letter-spacing:2px}
+
+/* 概念详情 */
+.concept-meta{display:flex;gap:20px;align-items:center;margin-bottom:28px;flex-wrap:wrap}
+.tag{padding:5px 12px;border-radius:20px;font-size:11px;font-weight:500;letter-spacing:.5px}
+.tag-practice{background:#FFF0E5;color:var(--accent)}.tag-feedback{background:#E8F5EC;color:var(--sage)}
+.tag-principle{background:#FFF8E1;color:#B8860B}.tag-concept{background:#F0E8F8;color:#7B5EA7}
+.concept-meta .meta-item{font-size:12px;color:var(--ink-soft)}.concept-meta .meta-item strong{color:var(--ink);font-weight:600}
+.concept-detail h1{font-family:var(--serif);font-size:52px;font-weight:600;line-height:1.05;letter-spacing:-.02em;margin-bottom:4px}
+.concept-detail .en-title{font-family:var(--serif);font-size:20px;color:var(--ink-faint);font-style:italic;margin-bottom:28px}
+.concept-body{max-width:720px}
+.concept-body p{font-size:16px;line-height:1.9;margin:18px 0}
+.concept-body p:first-of-type::first-letter{font-family:var(--serif);font-size:60px;float:left;line-height:.85;padding:4px 12px 0 0;font-weight:600;color:var(--accent)}
+.concept-body h3{font-family:var(--serif);font-size:22px;font-weight:600;margin:36px 0 10px}
+.concept-body blockquote{border-left:3px solid var(--accent);padding:6px 0 6px 22px;margin:24px 0;font-family:var(--serif);font-size:19px;font-style:italic;line-height:1.6;color:var(--ink-soft)}
+.concept-body ul{margin:14px 0;padding-left:20px}.concept-body li{font-size:15px;line-height:1.8;margin:6px 0}
+.related-section{margin-top:56px;padding-top:36px;border-top:1px solid var(--border)}
+.related-section h3{font-family:var(--serif);font-size:20px;font-weight:600;margin-bottom:14px}
+.related-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px}
+.related-card{padding:14px;border:1px solid var(--border);border-radius:10px;cursor:pointer;transition:.15s;background:#fff}
+.related-card:hover{border-color:var(--accent);background:var(--accent-light)}
+.related-card .rc-name{font-weight:500;font-size:13px}.related-card .rc-en{font-size:10px;color:var(--ink-faint);margin-top:2px}
+
+/* 图谱 */
+.graph-container{position:relative;width:100%;height:560px;background:#fff;border:1px solid var(--border);border-radius:16px;overflow:hidden}
+.graph-svg{width:100%;height:100%}
+.graph-node{cursor:pointer}.graph-node circle{transition:.2s}.graph-node:hover circle{stroke-width:3px}
+.graph-node text{font-family:var(--sans);font-size:10px;fill:#fff;pointer-events:none;font-weight:600;text-anchor:middle}
+.graph-edge{stroke:var(--border);stroke-width:1.5px}
+.graph-legend{display:flex;gap:16px;flex-wrap:wrap;margin-top:14px}
+.graph-legend .lg-item{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--ink-soft)}
+.graph-legend .lg-dot{width:12px;height:12px;border-radius:50%}
+
+/* 闯关 */
+.game-header{text-align:center;padding:24px 0}
+.game-header h2{font-family:var(--serif);font-size:34px;font-weight:600;margin-bottom:6px}
+.game-header p{color:var(--ink-soft);font-size:14px}
+.progress-track{display:flex;align-items:center;justify-content:center;margin:28px 0}
+.progress-node{width:44px;height:44px;border-radius:50%;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-weight:600;font-size:15px;background:#fff;position:relative;z-index:2;transition:.3s}
+.progress-node.unlocked{border-color:var(--accent);color:var(--accent)}
+.progress-node.current{border-color:var(--accent);background:var(--accent);color:#fff;box-shadow:0 0 0 6px var(--accent-light)}
+.progress-node.completed{border-color:var(--sage);background:var(--sage);color:#fff}
+.progress-line{width:56px;height:2px;background:var(--border);margin:0 -2px}.progress-line.completed{background:var(--sage)}
+.quiz-card{max-width:620px;margin:0 auto;background:#fff;border:1px solid var(--border);border-radius:18px;padding:36px;box-shadow:0 4px 24px rgba(0,0,0,.04)}
+.quiz-card .q-num{font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--accent);font-weight:600;margin-bottom:10px}
+.quiz-card .q-text{font-family:var(--serif);font-size:22px;font-weight:600;line-height:1.4;margin-bottom:24px}
+.quiz-options{display:flex;flex-direction:column;gap:8px}
+.quiz-option{padding:14px 18px;border:1px solid var(--border);border-radius:10px;text-align:left;font-size:14px;transition:.15s;background:var(--paper)}
+.quiz-option:hover:not(:disabled){border-color:var(--ink);background:#fff}
+.quiz-option.right{background:var(--sage);border-color:var(--sage);color:#fff}
+.quiz-option.wrong{background:var(--pink);border-color:var(--pink);color:#fff}
+.quiz-option:disabled{cursor:default}
+.quiz-feedback{margin-top:18px;padding:14px;border-radius:10px;font-size:13px;display:none}
+.quiz-feedback.show{display:block}.quiz-feedback.good{background:#E8F5EC;color:var(--sage)}.quiz-feedback.bad{background:#FDE8E8;color:var(--pink)}
+.quiz-next{margin-top:20px;text-align:right}
+.btn{display:inline-flex;align-items:center;gap:8px;padding:12px 24px;border-radius:10px;font-size:13px;font-weight:500;transition:.15s;cursor:pointer}
+.btn-primary{background:var(--ink);color:var(--paper)}.btn-primary:hover{background:var(--accent)}
+.btn-ghost{border:1px solid var(--border);color:var(--ink)}.btn-ghost:hover{border-color:var(--ink)}
+.knowledge-map{display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:10px;max-width:700px;margin:32px auto}
+.km-node{aspect-ratio:1;border:2px solid var(--border);border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:6px;transition:.3s;background:#fff;opacity:.4}
+.km-node.lit{border-color:var(--accent);background:var(--accent-light);opacity:1;box-shadow:0 0 12px rgba(232,101,42,.2)}
+.km-node .km-icon{font-size:20px;margin-bottom:2px}.km-node .km-label{font-size:10px;font-weight:500;line-height:1.2}
+.victory{text-align:center;padding:40px 0}
+.victory h2{font-family:var(--serif);font-size:44px;font-weight:600;color:var(--accent);margin-bottom:10px}
+.victory p{color:var(--ink-soft);font-size:15px}
+@media(max-width:760px){
+  .topbar-inner{padding:0 16px;gap:10px}.nav-links{display:none}.search-box{flex:1}
+  .hero h1{font-size:36px}.stats-row{grid-template-columns:repeat(2,1fr)}
+  .concept-detail h1{font-size:34px}.page{padding:28px 16px 56px}
+  .book-stats{grid-template-columns:repeat(2,1fr)}
+}
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="topbar-inner">
+    <a href="#/" class="logo">知识<span>花园</span></a>
+    <nav class="nav-links" id="navLinks"></nav>
+    <div class="search-box">
+      <input type="text" id="searchInput" placeholder="搜索概念…">
+      <div class="search-results" id="searchResults"></div>
+    </div>
+  </div>
+</header>
+
+<div class="view active" id="view-home"><div class="page" id="homeContent"></div></div>
+<div class="view" id="view-book"><div class="page" id="bookContent"></div></div>
+<div class="view" id="view-index"><div class="page" id="indexContent"></div></div>
+<div class="view" id="view-concept"><div class="page"><div class="concept-detail" id="conceptDetail"></div></div></div>
+<div class="view" id="view-graph"><div class="page" id="graphContent"></div></div>
+<div class="view" id="view-game"><div class="page" id="gameContent"></div></div>
+
+<script>
+// ============================================================
+// 数据：7 本书，每本有概念、关联、题目
+// ============================================================
+const BOOKS = [
+{id:"critical-thinking",num:"01",title:"明辨式思维",en:"Critical Thinking",summary:"收集、筛选、审视证据并合理推理，得出公正审慎判断的一套方法——像做科学研究一样思考。",color:"#7B5EA7",
+concepts:[
+ {id:"ct",name:"明辨式思维",en:"Critical Thinking",cat:"principle",stars:5,links:3,
+  summary:"基于大量观察和数据，提取规律、构建解释世界的模型，再用新信息检验、修正模型。",
+  content:`<p>成百上千年尺度上，只有讲求客观的科学在不断进步，而玄学和主观经验无法走向真相。明辨式思维就是把科学方法搬到日常思考中。</p>
+  <h3>核心动作</h3><ul><li>基于大量事实观察，占有信息和数据</li><li>分析提取规律——事物运行的深层模式</li><li>构建解释世界、解决问题的模型</li><li>用更多信息检验，根据反馈修改模型</li></ul>
+  <blockquote>生活在经验里，直到大厦崩塌。</blockquote>`,
+  related:["five-step","evidence","eight-modules"]},
+ {id:"five-step",name:"五步工作流",en:"Five-Step Workflow",cat:"principle",stars:5,links:2,
+  summary:"界定问题→搜集信息→构建解释模型→用模型解释辨析→迭代更新。",
+  content:`<p>以"网络游戏是否成瘾"为例：第一步问"什么是成瘾"，用清晰概念界定；第二步搜集成瘾的标志（不顾后果、耐受性）和神经基础；第三步构建模型——成瘾是黑化的学习，劫持多巴胺；第四步用模型辨析媒体观点；第五步随新证据迭代模型。</p>`,
+  related:["ct","evidence"]},
+ {id:"evidence",name:"证据分级",en:"Evidence Hierarchy",cat:"principle",stars:4,links:2,
+  summary:"最可信的证据是随机双盲对照试验，而非权威、经验或病人说好。",
+  content:`<p>洋地黄（地高辛）本是无数医生的"毕生经验"，直到 1999 年《美国心脏医学学会杂志》论文证明：患者血液中地高辛含量越高，死亡风险越高。无论权威多大、经验多少、多少病人说好，最可信的证据仍然是随机双盲对照试验。</p>`,
+  related:["ct","five-step"]},
+ {id:"eight-modules",name:"论证八模块",en:"Eight Argument Modules",cat:"principle",stars:4,links:1,
+  summary:"问题、概念、数据、论点、前提、推论、影响——每个论点都应过这七关检查。",
+  content:`<p>一个合理的论点应当是可溯源（有证据）、可兼容（符合概念框架）、未来可调整完善的。检查清单：我的论点是什么？概念清晰吗？证据充分吗？前提必然为真吗？数据怎么推出结论的？被接受后有哪些影响？</p>`,
+  related:["ct"]},
+ {id:"analogy",name:"类比推理",en:"Analogical Reasoning",cat:"principle",stars:3,links:1,
+  summary:"人最常用的推论方式——把不熟悉的情况与熟悉的比较来理解和决策。",
+  content:`<p>类比推理通过将不熟悉的情况与熟悉的情况进行比较，帮助我们理解、判断和决策。但类比也是最容易出错的推论——两个事物在某方面相似，不代表在其他方面也相似。使用时要问：这个类比的关键差异是什么？</p>`,
+  related:["eight-modules"]},
+ {id:"external-locus",name:"外控归因",en:"External Locus of Control",cat:"principle",stars:3,links:1,
+  summary:"学习不顺归因基因，生活不顺归因环境——两种相反说法的共同点是"与当下的我无关"。",
+  content:`<p>吊诡的是：当学习不如意时，人们就相信基因决定论，归咎于先天的基因、天赋或智商；而当生活不如意时，却反过来相信环境决定论，归咎于后天的外部环境。这两种相反观点的共同特征是与当下的自己无关，结果是外控而非内控的。</p>`,
+  related:["ct"]},
+ {id:"new-illiteracy",name:"新型文盲",en:"New Illiteracy",cat:"principle",stars:3,links:1,
+  summary:"50年前文盲指不识字的人；现在没有跨学科知识、不能开拓前沿的人有沦为新型文盲的风险。",
+  content:`<p>短短 50 年前，所谓"文盲"还仅仅指不识字的人。而现在，程序化的信息搬运和执行岗位正在被人工智能大面积取代，如果一个人没有跨学科知识，无法成为开拓专业前沿的创造性人才，就有沦为"新型文盲"的风险。</p>`,
+  related:["ct"]},
+ {id:"autonomous-reason",name:"自主理性",en:"Autonomous Reason",cat:"principle",stars:4,links:1,
+  summary:"知识海洋没有彼岸，自主理性能跨百年千年积累——康德：启蒙是普通人有勇气运用自己的理性。",
+  content:`<p>自主理性能认识到：知识的海洋没有彼岸，个体生命不过是沧海之一粟，却能对此安之若素。除了立于潮头这一瞬对宇宙秩序之美的赞叹、自身的勇气和意志力，一个瞬息的生命没有别的价值堪当永恒。康德说，启蒙不是让极少数人启发大多数人，而是让普通人有勇气运用自己的理性。</p>`,
+  related:["ct"]}
+],
+quizzes:[
+ [{q:"明辨式思维的五步工作流，第一步是什么？",opts:["用模型解释现象","发现问题，用清晰概念界定","搜集信息","迭代更新模型"],a:1},
+  {q:"最可信的医学证据是什么？",opts:["权威医生的经验","大量病人说好","随机双盲对照试验","传统用法"],a:2},
+  {q:"人最常用的推论方式是什么？",opts:["演绎推理","归纳推理","类比推理","统计推理"],a:2}],
+ [{q:"学习不顺归因基因、生活不顺归因环境，这叫什么？",opts:["内控归因","外控归因","明辨归因","理性归因"],a:1},
+  {q:"一个合理的论点应具备什么特征？",opts:["有权威背书","可溯源、可兼容、可调整","听起来有道理","符合主流观点"],a:1},
+  {q:"洋地黄（地高辛）的例子说明了什么？",opts:["传统经验最可靠","权威不会错","经验可能不可靠，需要对照试验验证","老药更安全"],a:2}],
+ [{q:"康德所说的启蒙是什么？",opts:["少数精英启发大众","普通人有勇气运用自己的理性","接受权威信息","停止独立思考"],a:1},
+  {q:""新型文盲"指的是什么？",opts:["不识字的人","没有跨学科知识、不能开拓前沿的人","不会用电脑的人","不读书的人"],a:1},
+  {q:"类比推理的风险是什么？",opts:["太慢","两事物在某方面相似不代表其他方面也相似","需要太多数据","不直观"],a:1}]
+]},
+
+{id:"erikson",num:"02",title:"埃里克森毕生发展",en:"Erikson's Lifespan Development",summary:"人生每个阶段都有一对核心矛盾，平衡好它，就长出对应的自我力量。",color:"#4A9E5C",
+concepts:[
+ {id:"lifespan",name:"毕生发展理论",en:"Lifespan Development Theory",cat:"principle",stars:5,links:3,
+  summary:"埃里克森最早提出：发展贯穿一生，每个阶段有一对核心矛盾，平衡好就长出自我力量。",
+  content:`<p>埃里克森是最早提出毕生发展理论的心理学家，通过探索毕生发展历程，他解决了自己青少年时期"A我"和"B我"的矛盾。发展不是到成年就停止，而是贯穿一生的连续过程。</p>`,
+  related:["early-adulthood","maturity","old-age"]},
+ {id:"early-adulthood",name:"成年早期·爱",en:"Early Adulthood · Love",cat:"principle",stars:5,links:2,
+  summary:"21-45岁，核心矛盾爱vs孤独，自我力量是广义的爱，品质是亲密关系。",
+  content:`<p>工作后进入真实世界：人际交往、工作、社会运转由一个个复杂系统嵌套成混沌现实。在这样的复杂系统中，人必须自己发现和界定问题、拿出创造性方案、按反馈不断调整——这才是真正自主学习的开始。</p>
+  <h3>矛盾</h3><p>一方面不愿投入事业或感情、没力气为他人付出、不敢承担麻烦；另一方面又孤独、缺乏深爱和有意义的生活。</p>
+  <blockquote>弗洛伊德说：爱与工作。</blockquote>`,
+  related:["lifespan","love-work"]},
+ {id:"maturity",name:"成熟期·关切",en:"Maturity · Care",cat:"principle",stars:4,links:1,
+  summary:"46-65岁，核心矛盾繁衍vs停滞，品质是"关心"——超越私人生活，对更多人命运产生关切。",
+  content:`<p>繁衍的冲动推动人超越私人生活和亲密关系，对社会和更多人的命运产生更广泛的关切，同时也使自己的生命获得扩张的动力和意义。良好平衡的繁衍感产生的自我品质是"关心"。</p>`,
+  related:["lifespan"]},
+ {id:"old-age",name:"老年期·智慧",en:"Old Age · Wisdom",cat:"principle",stars:4,links:1,
+  summary:"65岁以上，核心矛盾自我完整vs绝望，品质是睿智——意义的创造与仁慈。",
+  content:`<p>从老年期产生的良好自我品质是"睿智"，包括意义的创造和仁慈这两层含义。这是一种对生命的积极关注和持续的个人成长，即使面对死亡迫近的现实。他带着突破自我围墙的爱，感到对人们的普遍共情和悲悯。</p>
+  <blockquote>这一生，不论结果，不论何时，他都在热爱着、奋进着。</blockquote>`,
+  related:["lifespan"]},
+ {id:"adolescence",name:"青春期·混乱即机遇",en:"Adolescence · Chaos as Opportunity",cat:"principle",stars:4,links:1,
+  summary:"不稳定和混乱恰恰标志着大脑发展的飞跃期和令人激动的机会期。",
+  content:`<p>虽然青春期的标签是"叛逆""危机""不好管"，但和婴儿期一样，不稳定和混乱恰恰标志着大脑发展的飞跃期和令人激动的机会期。生物层面，童年与青春期到青年期是大脑可塑性的两大机遇期；但生物基础并非一切，持续的经验塑造力更大。</p>`,
+  related:["lifespan"]},
+ {id:"love-work",name:"爱与工作",en:"Love and Work",cat:"principle",stars:4,links:1,
+  summary:"弗洛伊德：人怎样才能活得幸福？爱与工作。工作本应是幸福的源头。",
+  content:`<p>人怎样才能活得幸福呢？弗洛伊德说：爱与工作。工作本应是幸福的源头，停止了工作，会离幸福更远。人能否从工作中感到幸福，在于如何认识自己工作的意义和价值。</p>`,
+  related:["early-adulthood"]}
+],
+quizzes:[
+ [{q:"埃里克森毕生发展理论的核心观点是什么？",opts:["发展到成年就停止","每个阶段有一对核心矛盾，平衡好就长出自我力量","发展由基因决定","童年决定一切"],a:1},
+  {q:"成年早期（21-45）的核心矛盾是什么？",opts:["繁衍vs停滞","爱vs孤独","自我完整vs绝望","信任vs不信任"],a:1},
+  {q:"弗洛伊德说幸福的来源是什么？",opts:["金钱与地位","爱与工作","健康与长寿","名誉与权力"],a:1}],
+ [{q:"成熟期（46-65）要发展的品质是什么？",opts:["爱","关心","智慧","希望"],a:1},
+  {q:"老年期的核心矛盾是什么？",opts:["爱vs孤独","繁衍vs停滞","自我完整vs绝望失落","主动vs内疚"],a:2},
+  {q:"青春期的混乱意味着什么？",opts:["需要严格管教","大脑发展的飞跃期和机会期","心理疾病","应该药物干预"],a:1}],
+ [{q:"成年早期自主学习的真正开始是什么？",opts:["在学校考试","在混沌现实中自己发现和界定问题","读更多书","跟随权威"],a:1},
+  {q:"老年期"睿智"品质包括哪两层含义？",opts:["财富与健康","意义的创造与仁慈","权力与地位","知识与经验"],a:1},
+  {q:"埃里克森用毕生发展理论解决了自己的什么问题？",opts:["职业选择","青少年时期A我和B我的矛盾","婚姻问题","财务危机"],a:1}]
+]},
+
+{id:"five-elements",num:"03",title:"学习五元素与注意力",en:"Five Elements & Attention",summary:"高效学习不是往脑子里塞东西，而是在最近学习区里，调动注意力、主动构建、有效练习并拿到有效反馈。",color:"#E8652A",
+concepts:[
+ {id:"five-elements",name:"学习五元素",en:"Five Elements of Learning",cat:"principle",stars:5,links:4,
+  summary:"最近学习区、注意力、主动参与、有效练习、有效反馈——五个环环相扣的元素。",
+  content:`<p>这本书把学习拆成五个环环相扣的元素：找准最近学习区（内容不过难也不过易）；学会调集和引导注意力（思考的水车靠它推动）；主动参与（大脑不是空仓库）；有效练习（科学方法事半功倍）；有效反馈（能追溯到知识点、可迭代）。</p>`,
+  related:["zpd","attention-network","alerting","executive"]},
+ {id:"zpd",name:"最近学习区",en:"Zone of Proximal Development",cat:"principle",stars:5,links:1,
+  summary:"介于舒适区和恐慌区之间，内容刚好跳一跳够得着，学习效率最高。",
+  content:`<p>内容太简单会无聊，太难会恐慌；刚好跳一跳够得着的地方，学习效率最高。对应到日常，就是别拿别人的进度横向比较，也别定超出当前能力的目标。介于舒适区和恐慌区之间的地带叫作最近学习区，又称最近发展区。</p>`,
+  related:["five-elements"]},
+ {id:"attention-network",name:"注意力网络模型",en:"Attention Network Theory",cat:"principle",stars:5,links:3,
+  summary:"注意力分三个功能性神经网络：警觉性、方向性、执行注意力，像接力一样依次启动。",
+  content:`<p>该理论将注意力划分为三个主要的功能性神经网络——警觉性注意力、方向性注意力和执行注意力。三种注意力不是平行开关，而是"先警觉点亮、再方向聚焦、最后执行调控"的链条。</p>`,
+  related:["alerting","orienting","executive"]},
+ {id:"alerting",name:"警觉性注意力",en:"Alerting Attention",cat:"principle",stars:4,links:2,
+  summary:"像瞬间爆闪的强光灯，释放肾上腺素等神经递质；被过度刺激会耗尽资源。",
+  content:`<p>像瞬间爆闪的强光灯。爆闪瞬间释放大量神经递质——肾上腺素、去甲肾上腺素、乙酰胆碱。某刺激被过度关注时，感官输入的皮质会重组：神经资源被重新分配到这个刺激的处理上，忽略其他输入。这就是为什么刷完短视频再看书，会觉得"智力下降"——不是真变笨，是警觉性资源被耗尽了。</p>`,
+  related:["attention-network","cortical"]},
+ {id:"orienting",name:"方向性注意力",en:"Orienting Attention",cat:"principle",stars:3,links:1,
+  summary:"像夜晚行车的车前灯，能在一定范围内对特定事物保持追踪。",
+  content:`<p>像夜晚行车的车前灯，可以在一定范围内对特定事物保持追踪，把焦点从背景里捞出来。它负责"看哪里"的选择。</p>`,
+  related:["attention-network"]},
+ {id:"executive",name:"执行注意力",en:"Executive Attention",cat:"principle",stars:4,links:2,
+  summary:"负责注意力本身的管理和调控，主要脑区是前扣带回和前额叶。",
+  content:`<p>主要负责注意力的管理和调控，主要脑区是前扣带回和前额叶。语言的听说读写篇幅长、信息多，全靠它在较长时间内持续监控、不断形成预期、分析意义，才能把握对方的意思。</p>`,
+  related:["attention-network","five-elements"]},
+ {id:"cortical",name:"皮质重组",en:"Cortical Reorganization",cat:"principle",stars:3,links:1,
+  summary:"某种刺激被过度关注时，神经资源被重新分配到这个刺激，忽略其他感官输入。",
+  content:`<p>感官输入的皮质重组原理揭示，当某种特定刺激被大脑过度关注时，神经资源可能被重新分配到对这个刺激的处理上，而忽略其他相关的感官输入。短视频之所以害人，是因为它滥用了警觉性注意力，把神经资源一次性榨干。</p>`,
+  related:["alerting"]},
+ {id:"comfort-panic",name:"舒适区vs恐慌区",en:"Comfort vs Panic Zone",cat:"principle",stars:3,links:1,
+  summary:"太简单无聊，太难恐慌；最近学习区在两者之间。",
+  content:`<p>学习内容需要找准"最近学习区"——不过难也不过易。太简单会陷入舒适区感到无聊，太难会陷入恐慌区感到焦虑。介于两者之间的地带才是高效学习发生的地方。</p>`,
+  related:["zpd"]}
+],
+quizzes:[
+ [{q:"学习五元素是哪五个？",opts:["阅读、写作、听力、口语、翻译","最近学习区、注意力、主动参与、有效练习、有效反馈","预习、上课、复习、作业、考试","记忆、理解、应用、分析、评价"],a:1},
+  {q:"注意力网络模型把注意力分成几个系统？",opts:["2个","3个","4个","5个"],a:1},
+  {q:"最近学习区介于什么之间？",opts:["舒适区和恐慌区","学习区和休息区","简单区和困难区","主动区和被动区"],a:0}],
+ [{q:"执行注意力主要靠哪些脑区？",opts:["小脑和脑干","前扣带回和前额叶","海马体和杏仁核","枕叶和颞叶"],a:1},
+  {q:"为什么刷完短视频再看书会觉得智力下降？",opts:["真的变笨了","过度刺激耗尽警觉性注意力的神经资源","眼睛疲劳","记忆力下降"],a:1},
+  {q:"警觉性注意力像什么？",opts:["车前灯","瞬间爆闪的强光灯","聚光灯","雷达"],a:1}],
+ [{q:"方向性注意力的作用是什么？",opts:["管理注意力本身","在一定范围内对特定事物保持追踪","释放神经递质","存储记忆"],a:1},
+  {q:"皮质重组原理说明了什么？",opts:["大脑不可改变","过度关注某刺激会忽略其他感官输入","皮质只处理视觉","神经资源无限"],a:1},
+  {q:"学习前应该做什么？",opts:["先刷短视频热身","远离强刺激，让警觉系统复位","立刻开始最难的任务","多喝咖啡"],a:1}]
+]},
+
+{id:"memory-engagement",num:"04",title:"主动参与、记忆与内驱",en:"Engagement, Memory & Motivation",summary:"记忆不是搬运，而是对信息做深度加工、结成网络；学习的魔法是积累，改变靠最小行动目标和"我想要"。",color:"#E8B923",
+concepts:[
+ {id:"active-engagement",name:"主动参与",en:"Active Engagement",cat:"principle",stars:5,links:2,
+  summary:"消极的有机体什么也学不到；学习就是打通个人与世界的关联。",
+  content:`<p>大量实验支持：消极的有机体什么也学不到。求知与思考本应是人类的欲望，像饥饿感一样。当旁观者的时间越久，就越感到自己和世界隔绝——学习就是打通个人与世界的关联，让个人的情感奔涌，涌入客观世界。</p>`,
+  related:["consumerism","depth-encoding"]},
+ {id:"consumerism",name:"消费主义偷走学习",en:"Consumerism Steals Learning",cat:"principle",stars:4,links:1,
+  summary:"读书变成购买（买讲解）、做题变成购买（APP收集错题）、学英语变成购买（外教课）。",
+  content:`<p>当"消费"溢出经济活动、主导精神世界，就成了消费主义。读书变成购买（花钱买现成讲解）、做题变成购买（花钱让APP收集错题）、学英语变成购买（300元30分钟外教）。凡是不可购买、不可横向比较之物，就不被看见——这正是教育军备竞赛的心理根源。</p>`,
+  related:["active-engagement"]},
+ {id:"three-memories",name:"三种长时记忆",en:"Three Long-Term Memories",cat:"principle",stars:5,links:3,
+  summary:"情节记忆（个人经历）、程序性记忆（小脑/运动）、语义记忆（概念与规则）。",
+  content:`<p>长时记忆分三种：情节记忆是个人化的，像生命中某年某月某一天的脑内电影；程序性记忆存储在小脑中，主要和感知与运动系统相关，例如骑自行车、学游泳；语义记忆除了概念构成的知识体系之外，还包括一些原则和规则。</p>`,
+  related:["episodic","procedural","semantic"]},
+ {id:"episodic",name:"情节记忆",en:"Episodic Memory",cat:"principle",stars:3,links:1,
+  summary:"个人化的，像某年某月某天的脑内电影。",
+  content:`<p>情节记忆是个人化的，就像生命中某年某月某一天的脑内电影。它记录的是"我在什么时间、什么地点、经历了什么"，带有强烈的个人色彩和情感标记。</p>`,
+  related:["three-memories"]},
+ {id:"procedural",name:"程序性记忆",en:"Procedural Memory",cat:"principle",stars:3,links:1,
+  summary:"存储在小脑，与感知运动相关，如骑车、游泳——"知道怎么做"。",
+  content:`<p>程序性记忆存储在小脑中，主要和感知与运动系统相关，例如骑自行车、学游泳。它是"知道怎么做"的记忆，一旦学会很难忘记，但也很难用语言描述清楚。</p>`,
+  related:["three-memories"]},
+ {id:"semantic",name:"语义记忆",en:"Semantic Memory",cat:"principle",stars:4,links:1,
+  summary:"概念构成的知识体系，以及背后的原则和规则——"知道是什么"。",
+  content:`<p>除了概念构成的知识体系之外，语义记忆还包括一些原则和规则。小白与高手的差别，关键不仅在于高级思维能力的差距，也包括记忆储备的差距。如果记忆像把图书馆开成没有分类的废纸仓库，使用时就无法以最高效通路激活。</p>`,
+  related:["three-memories"]},
+ {id:"depth-encoding",name:"编码深度决定记忆",en:"Depth of Encoding",cat:"principle",stars:5,links:2,
+  summary:"记忆质量取决于编码时对信息处理的深度——给内容赋予层级和意义。",
+  content:`<p>"那些我们不曾深入思考的东西，很快就会被忘却。"记忆的质量取决于我们在记忆编码时对信息处理的深度，即给初级记忆中的内容赋予层级和意义。大脑最渴望寻求的是意义与理解：如果大脑能把词句构建成一个连贯的理解框架，并放在完整的画面中，记忆就能更轻松准确。</p>`,
+  related:["active-engagement","four-memory-tips"]},
+ {id:"four-memory-tips",name:"提升记忆四招",en:"Four Memory Techniques",cat:"principle",stars:4,links:1,
+  summary:"散点结网、制造场景、抽象视觉化、测试再现。",
+  content:`<p>1. 散点结网：自己思考加工，把孤立知识点连成网络。2. 制造场景：把知识按场景主题组织（如单词按场景分类）。3. 抽象视觉化：画树状图、包含关系图、时间轴，把抽象变画面。4. 测试再现：学完立刻提取，极大帮助记忆。</p>`,
+  related:["depth-encoding"]},
+ {id:"self-efficacy",name:"自我效能",en:"Self-Efficacy",cat:"principle",stars:4,links:1,
+  summary:"多大程度上相信自己的行为能带来预期结果——相信方向盘握在自己手里。",
+  content:`<p>什么是"自我效能"？简单地说，就是一个人在多大程度上相信自己的行为能产生自己所预期的结果，多大程度上相信方向盘掌握在自己手里。自我效能高的人更愿意面对挑战，因为他们相信努力会有回报。</p>`,
+  related:["min-action"]},
+ {id:"min-action",name:"最小行动+持续记录",en:"Minimum Action + Tracking",cat:"principle",stars:5,links:2,
+  summary:"拆分最小可执行目标+持续记录，把偶然努力变成长期行为，实现外控转内控。",
+  content:`<p>"每天读书半小时""每天解决3个数学问题"，这类清晰且可执行的小目标能立刻带来明确的反馈。记录可以帮你对抗"一夜之间变好"的冲动和"一念之间放弃"的冲动。变外控为内控的关键，就是通过拆分最小可执行目标和持续记录，将偶然为之的努力变成长期稳固的行为。</p>
+  <blockquote>《贫穷的本质》：穷人难走出贫穷陷阱，正是因为定不明确的理想目标、发现达不到就放弃。</blockquote>`,
+  related:["self-efficacy","play"]},
+ {id:"play",name:"二分教八分练",en:"20% Teach, 80% Practice",cat:"principle",stars:4,links:1,
+  summary:"变"你必须"为"我想要"——play的核心是自主操作，在玩中完成大量非正式练习。",
+  content:`<p>英文的"play"一词，同时包括了演奏、打球、下棋、玩耍等多重含义，而统一的核心含义是"自主操作"。"玩"意味着沉浸其中，自然欲罢不能，学习者本人忍不住反反复复去做，并由本人根据反馈自主做出调适。在"玩"中，学习者进行了大量的非正式练习、重组和内化。</p>`,
+  related:["min-action"]}
+],
+quizzes:[
+ [{q:"三种长时记忆分别是什么？",opts:["短期、中期、长期","情节记忆、程序性记忆、语义记忆","视觉、听觉、触觉","工作记忆、长期记忆、瞬时记忆"],a:1},
+  {q:"记忆质量取决于什么？",opts:["重复次数","编码时对信息处理的深度","记忆力天赋","睡眠时间"],a:1},
+  {q:"程序性记忆主要存储在哪里？",opts:["大脑皮层","小脑","海马体","前额叶"],a:1}],
+ [{q:"怎么把外控变成内控？",opts:["定远大目标","拆分最小可执行目标+持续记录","多看书","找老师监督"],a:1},
+  {q:"自我效能指的是什么？",opts:["学习成绩好","相信自己的行为能带来预期结果","身体健康","社交能力强"],a:1},
+  {q:"消费主义如何偷走学习？",opts:["让人买不起书","把读书做题学英语都变成购买行为","减少学习时间","降低智商"],a:1}],
+ [{q:"提升记忆的四招不包括哪个？",opts:["散点结网","制造场景","抽象视觉化","反复阅读"],a:3},
+ {q:"英文play一词的核心含义是什么？",opts:["娱乐","自主操作","比赛","休息"],a:1},
+ {q:""我的积累还不够"这句话的含义是？",opts:["承认自己笨","把"天生不擅长"改为"积累不够"，强调可改变","放弃学习","找借口"],a:1}]
+]},
+
+{id:"practice-feedback",num:"05",title:"有效练习与有效反馈",en:"Effective Practice & Feedback",summary:"练习要讲时机、换花样、打散间隔、主动提取；反馈要能追溯到知识点、让你反复改进直到掌握。",color:"#E8652A",
+concepts:[
+ {id:"interleaved",name:"穿插练习",en:"Interleaved Practice",cat:"practice",stars:5,links:3,
+  summary:"把不同技能单位混在一起练，逼大脑离开舒适区做更深的区分和比较。",
+  content:`<p>穿插练习的前提是"有可供穿插的单位"——先把复杂知识和技能分解成更小的单位，然后把不同单位混在一起练习。集中练习同一种任务时，大脑处于"舒适区"，只需要浅层识别。而穿插练习迫使大脑对类似任务不断区分、回想各自要点，进行更深层次的处理和比较。</p>
+  <blockquote>每当我们逼迫大脑多走一步，额外多付出一点努力时，就会带来额外的好处。</blockquote>`,
+  related:["spaced","retrieval","rich"]},
+ {id:"spaced",name:"分散练习",en:"Spaced Practice",cat:"practice",stars:5,links:2,
+  summary:"拉开练习间隔，创造更多睡眠机会，新知识的巩固必须通过睡眠。",
+  content:`<p>分散练习（间隔重复）是认知科学中最被反复验证的学习策略之一。拉开间隔更能促使大脑重新布线。第二个原因是这样能创造更多睡眠的机会，而新知识的巩固必须通过睡眠完成。作者大二时把《牛津高阶》1600多页剪开，每50页订成一个小本，变成30多本——这就是分散到日常的极端例子。</p>`,
+  related:["interleaved","retrieval"]},
+ {id:"retrieval",name:"提取练习",en:"Retrieval Practice",cat:"practice",stars:5,links:3,
+  summary:"主动回忆比反复阅读有效得多，最典型最有效的方式就是测试。",
+  content:`<p>标出几个关键词（重要概念），先自己讲：用了什么概念去解释问题、举了什么例子，然后对照文章查漏。主动提取的最典型、最有效的方式就是测试。那些我们不曾深入思考的东西，很快就会被忘却。</p>`,
+  related:["feynman","concept-card","spaced"]},
+ {id:"feynman",name:"费曼技巧",en:"Feynman Technique",cat:"practice",stars:4,links:2,
+  summary:"用自己的话重新表述，自己举实例，检验新知识是否真的理解。",
+  content:`<p>费曼从小就有个习惯：不管别人告诉他什么现成的定理和知识，他都要用自己的话重新表述一遍，自己要举实例，看是否符合定义的描述，从而检验新知识的合理性。四步法：选概念假装教给12岁孩子→用最简单语言解释→简化和类比→自己举例验证。</p>`,
+  related:["retrieval","concept-card"]},
+ {id:"concept-card",name:"概念卡片",en:"Concept Cards",cat:"practice",stars:4,links:1,
+  summary:"正面只有一个词（概念），反面才是定义、论证和举例，随时随地自测。",
+  content:`<p>万物皆可"刷卡"。从百科、教材、专著、论文中摘录出概念名词和定理，做成卡片，随时随地给自己测试。卡片的正面只有一个词（概念），反面才是定义、论证和举例等信息。配合间隔重复系统（如 Anki）使用效果最佳。</p>`,
+  related:["retrieval","feynman"]},
+ {id:"feedback-loop",name:"有效反馈闭环",en:"Effective Feedback Loop",cat:"feedback",stars:5,links:2,
+  summary:"对答案→追溯知识点→针对性跟进练习→再测，循环往复直到掌握。",
+  content:`<p>做完题当场对答案 → 追溯到题目所属知识点 → 做针对性跟进练习 → 再测同类题 → 正确率上升 → 循环往复直到彻底掌握。关键是错题能挂到"知识树"上的具体节点，而不是对完答案就扔。可汗学院就是这个思路的样板。</p>`,
+  related:["comparison","two-pains"]},
+ {id:"comparison",name:"对比练习",en:"Comparison Practice",cat:"feedback",stars:4,links:1,
+  summary:"没有标准答案的输出练习，用「和范本对比」来制造反馈。",
+  content:`<p>写作和口语等输出练习，没有明确对错答案，怎么得到有效反馈？有个非常简单的方法，效果比外教真人一对一还好，那就是对比练习。口语：朗读绘本时录音，跟原声对比。写作：读一篇文章先提炼纲要，过几天忘记原文后对着大纲重写，再和原文逐句对比。</p>`,
+  related:["feedback-loop"]},
+ {id:"far-transfer",name:"远迁移",en:"Far Transfer",cat:"principle",stars:4,links:1,
+  summary:"在与学习情境差异较大的多样场景下，能解决不同类型的问题。",
+  content:`<p>只有在与学习情景差异较大的多样场景下，能够解决不同类型的问题，才算实现了知识的远迁移（far transfer）。做法之一：针对同一个知识要点，看不同的人从不同角度如何界定、论证、举例。</p>`,
+  related:["rich"]},
+ {id:"rich",name:"丰富模式",en:"Rich Practice",cat:"principle",stars:3,links:2,
+  summary:"利用多样素材和主动参与的实践，在差异大的场景下练习，实现远迁移。",
+  content:`<p>所谓丰富模式，不是抛开教材的知识体系搞许多不必要的花样，而是利用丰富多样的素材、主动参与的实践，开展有效练习。练习要讲时机。严肃训练阶段前一定要铺垫兴趣引入，练习本身也要运用丰富模式。</p>`,
+  related:["far-transfer","interleaved"]},
+ {id:"two-pains",name:"两种学习之苦",en:"Two Pains of Learning",cat:"principle",stars:3,links:1,
+  summary:"无效练习→无意义感；无效反馈→惩罚感。解决了这两个，学习就不苦了。",
+  content:`<p>学习之苦自然也一分为二：其一是无效练习导致的无意义感，其二是无效反馈导致的惩罚感。前者靠有效练习的五种武器（穿插、分散、提取、费曼、卡片）来解决，后者靠有效反馈闭环和对比练习来解决。</p>`,
+  related:["feedback-loop"]}
+],
+quizzes:[
+ [{q:"穿插练习的核心前提是什么？",opts:["把复杂技能分解成更小的单位","一次只练一种任务","练完立刻对答案","每天固定时间练习"],a:0},
+  {q:"分散练习（间隔重复）之所以有效，一个重要原因是？",opts:["节省时间","创造更多睡眠机会，新知识通过睡眠巩固","减少疲劳","可以同时学更多科目"],a:1},
+  {q:"主动提取最典型、最有效的方式是？",opts:["反复阅读笔记","做思维导图","测试","听老师讲解"],a:2}],
+ [{q:"费曼技巧的核心做法是？",opts:["背诵定义","用自己的话重新表述并自己举例","做大量习题","看视频讲解"],a:1},
+  {q:"概念卡片的正面应该放什么？",opts:["完整定义","一个词（概念名）","举例论证","思维导图"],a:1},
+  {q:"好的反馈闭环，关键一步是？",opts:["对完答案就扔","错题能追溯到知识树上的具体节点","只看分数","每天做新题"],a:1}],
+ [{q:"写作/口语没有标准答案时，最有效的反馈方法是？",opts:["找外教批改","对比练习（和范本逐句对比）","多读范文","写日记"],a:1},
+  {q:"什么是知识的远迁移？",opts:["把知识搬到远处","在差异大的多样场景下能解决不同类型问题","长途旅行时学习","把知识教给远方的人"],a:1},
+  {q:"学习之苦的两个来源是？",opts:["太难和太慢","无效练习→无意义感，无效反馈→惩罚感","记不住和不会用","没时间和没精力"],a:1}]
+]},
+
+{id:"rhetoric-writing",num:"06",title:"写作与说服",en:"Rhetoric & Writing",summary:"记叙文抓矛盾冲突，论说文靠证据与架构；说服 = 逻辑 + 情感 + 信任 + 时机。",color:"#7B5EA7",
+concepts:[
+ {id:"four-elements",name:"修辞四要素",en:"Four Rhetorical Elements",cat:"principle",stars:5,links:4,
+  summary:"Ethos信任、Logos逻辑、Pathos情感、Kairos时机——亚里士多德《修辞学》。",
+  content:`<p>人们在说服时往往借助三种力量让别人信服：信任（Ethos）、逻辑（Logos）和情感（Pathos）。现代研究基于亚里士多德的论述，整理出第四种说服要素：恰当的时机（Kairos）。</p>`,
+  related:["logos","pathos","ethos","kairos"]},
+ {id:"logos",name:"Logos 逻辑",en:"Logos",cat:"principle",stars:4,links:1,
+  summary:"逻辑是文章的主架构，主架构有缺陷就随时会塌。写作前必列三层大纲。",
+  content:`<p>逻辑就好像建筑的主架构，如果主架构有重大缺陷，立不起来，随时可能坍塌。归纳是从个别现象提炼出一般规律，演绎是将一般规律应用到个别现象。写作前一定要列大纲，大纲需要有三层：抽象主旨→概念框架→具体事例。成品的大纲从左到右，从抽象主旨到具体事例排列。</p>`,
+  related:["four-elements"]},
+ {id:"pathos",name:"Pathos 情感",en:"Pathos",cat:"principle",stars:4,links:1,
+  summary:"希腊文原义"痛苦和体验"——借真实体验调动情感，反面论证通常更有力。",
+  content:`<p>Pathos这个希腊词的意思是痛苦和体验。Pathos指借助真实体验，调动情感的力量来影响和说服。让读者/听众和你深深共情，超越你我的身体、时间与空间的物理界限。在说服的时候，欲要卖苦口良药，须先拨动心弦。往往不如从负面后果来讲：人对"得到"不足为奇，对"失去"的痛苦反应强烈，因此反面论证通常更有力。</p>`,
+  related:["four-elements"]},
+ {id:"ethos",name:"Ethos 信任",en:"Ethos",cat:"principle",stars:4,links:1,
+  summary:"展示自己是个怎样的人，能否得到对方的信任，是头等重要的事。",
+  content:`<p>展示自己是个怎样的人，能否得到对方的信任，是头等重要的事。最主要的证据可以分为三大类：引用、案例及数据、实验等硬核证据。读书不要只关注结论，要注意搜集书中的数据、实验、案例、个人经历与事实证据。查理·芒格必须养成核对"检查清单"的习惯。</p>`,
+  related:["four-elements"]},
+ {id:"kairos",name:"Kairos 时机",en:"Kairos",cat:"principle",stars:4,links:1,
+  summary:"判断受众的关切与困惑，制造时机三步：拉注意力→颠覆世界观→抛出看法。",
+  content:`<p>需要判断受众所关切的问题和困惑。感知并调动对方的关切，才能指出迫切要开辟的方向和应采取的行动。制造时机三步：第一步引发受众的共同注意，注意力拉手；第二步将与自己拉起了手的受众们猛地一拽，颠覆了人们过去坚信不疑的安稳世界观；第三步提出你的看法。讲微积分时先说"没有它就没有手机、计算机、微波炉"，先营造迫切性。</p>`,
+  related:["four-elements"]},
+ {id:"conflict",name:"矛盾冲突是主线",en:"Conflict as Mainline",cat:"principle",stars:5,links:1,
+  summary:"记叙文真正的主线是矛盾冲突，5W2H只是服务于它的具体事例。",
+  content:`<p>叙述一件事情，自然少不了"5W2H"。但叙述事件一样要挖掘出推动其发展的深层推动力——矛盾冲突。矛盾冲突是这一叙述真正的主线，也就是三级笔记的第二级概念框架；而时间线和5W2H信息属于笔记的第三级具体事例，服务于矛盾冲突。</p>`,
+  related:["three-level-notes"]},
+ {id:"three-level-notes",name:"三级笔记法",en:"Three-Level Notes",cat:"principle",stars:5,links:2,
+  summary:"模式抓取→三级笔记→仿写对比，拿着笔记就能复述原文。",
+  content:`<p>先用几分钟快速划出关键词，回答各种what、how和why问题，列出对立项，并得出文章主旨，这是对文章进行的模式抓取；再用几分钟整理出原文的三级笔记，这个笔记不是现成的，由你自己经过多次思考判断形成的，所以拿着这个笔记，你已经能复述原文了；过几天，花半小时对着三级笔记，调取自己的相关背景知识和生活体验，仿写出一篇文章，再将自己写出的文章和原文对比。</p>`,
+  related:["conflict","abstract-to-concrete"]},
+ {id:"abstract-to-concrete",name:"变抽象为具体",en:"Abstract to Concrete",cat:"principle",stars:4,links:1,
+  summary:"再抽象的原理也要用类比、隐喻、拟人，变触手可及；神与形相互充盈。",
+  content:`<p>变抽象为具体：再难懂、再抽象的知识和原理，都需要进行类比或者隐喻，以一个生动的画面来呈现。变静态为动态，变结论为问题，聚焦中心矛盾。老舍写"当作家—拿钢笔；当老师—拿粉笔；不能自我完善—自误误人；养活自己—薪水"，用的词都是具体事物。抽象的道理总是贫乏而枯竭的，生命中直接感受的真实体验才是长青和多变的。神与形应当相互充盈，缺一不可。</p>`,
+  related:["three-level-notes"]}
+],
+quizzes:[
+ [{q:"说服的四要素是什么？",opts:["论点、论据、论证、结论","Ethos信任、Logos逻辑、Pathos情感、Kairos时机","开头、中间、结尾、标题","记叙、描写、议论、抒情"],a:1},
+  {q:"Logos指的是什么？",opts:["情感","信任","逻辑","时机"],a:2},
+  {q:"记叙文真正的主线是什么？",opts:["时间线","5W2H","矛盾冲突","人物"],a:2}],
+ [{q:"为什么反面论证通常比正面更有力？",opts:["人喜欢负面信息","人对"得到"不足为奇，对"失去"的痛苦反应强烈","反面更容易写","正面没有说服力"],a:1},
+  {q:"三级笔记法的第一步是什么？",opts:["仿写","模式抓取（划关键词、答what/how/why）","背诵原文","整理大纲"],a:1},
+  {q:"Kairos（时机）的三步法不包括哪个？",opts:["拉注意力拉手","颠覆安稳世界观","抛出你的看法","列举大量数据"],a:3}],
+ [{q:"Ethos（信任）的核心是什么？",opts:["调动情感","逻辑推理","展示自己是怎样的人，能否被信任","选择恰当时机"],a:2},
+ {q:"老舍"钢笔与粉笔"的例子说明了什么写作原则？",opts:["多用形容词","变抽象为具体，用具体事物表达抽象道理","多用排比","字数要多"],a:1},
+ {q:"Pathos的希腊文原义是什么？",opts:["逻辑","痛苦和体验","信任","时机"],a:1}]
+]},
+
+{id:"thinking-fast-slow",num:"07",title:"思考，快与慢",en:"Thinking, Fast and Slow",summary:"卡尼曼把大脑拆成"快"与"慢"两套系统，大多数决策失误，都源于该慢的时候让快系统偷懒。",color:"#4A9E5C",
+concepts:[
+ {id:"system1",name:"系统1（快）",en:"System 1 (Fast)",cat:"principle",stars:5,links:2,
+  summary:"自动、即时、不费力、靠直觉，是默认的"省电模式"，也最容易被偏见劫持。",
+  content:`<p>系统1是自动、即时、不费力、靠直觉的。它是默认的"省电模式"，会用经验法则快速给出答案，却常常在复杂判断里出错。系统1不是bug，而是进化出来的节能策略。真正要练的不是"永远理性"，而是识别什么时候该切到系统2。</p>`,
+  related:["system2","energy-saving"]},
+ {id:"system2",name:"系统2（慢）",en:"System 2 (Slow)",cat:"principle",stars:5,links:1,
+  summary:"需要主动调用注意力，费力，负责推理、计算与自我控制。",
+  content:`<p>系统2需要主动调用注意力，费力，负责推理、计算与自我控制。大脑虽然只占身体2%的重量，却消耗了全身20%的能量。调用系统2是昂贵的，所以大脑能省则省——这就是为什么大多数时候我们在用系统1做决策。</p>`,
+  related:["system1"]},
+ {id:"anchoring",name:"锚定效应",en:"Anchoring Effect",cat:"principle",stars:5,links:1,
+  summary:"先出现的数字会成为"锚"，哪怕与问题毫无关系，也会把后续判断拉向它。",
+  content:`<p>先出现的数字会成为"锚"，哪怕它与问题毫无关系，也会把后续判断拉向它。这是系统1在偷懒——它抓住最先出现的信息作为参照点，然后在这个参照点附近调整，而调整往往是不充分的。</p>`,
+  related:["system1"]},
+ {id:"peak-end",name:"峰终定律",en:"Peak-End Rule",cat:"principle",stars:4,links:1,
+  summary:"人对一段体验的记忆，主要由高峰时刻和结尾决定，而不是全程感受的平均值。",
+  content:`<p>人对一段体验的记忆，主要由高峰时刻和结尾决定，而不是全程感受的平均值。这意味着一段体验的"好"与"坏"，不取决于过程中的平均感受，而取决于最高峰和最后时刻。这对产品设计、服务体验、演讲结尾都有重要启示。</p>`,
+  related:["system1"]},
+ {id:"availability",name:"可得性启发",en:"Availability Heuristic",cat:"principle",stars:4,links:1,
+  summary:"越容易想起的例子，越被当成"常见"或"重要"——鲜活的画面会扭曲概率判断。",
+  content:`<p>越容易想起的例子，越被我们当成"常见"或"重要"——鲜活的画面会扭曲概率判断。系统1用"想不想得起来"来代替"概率有多大"，这在大多数时候够用，但在涉及风险评估时会严重出错——比如飞机事故画面鲜活，人们就觉得坐飞机危险，但实际上飞机是最安全的交通工具。</p>`,
+  related:["system1"]},
+ {id:"energy-saving",name:"节能模式",en:"Energy-Saving Mode",cat:"principle",stars:4,links:1,
+  summary:"系统1是默认的省电模式，该切系统2的时候没切，就是大多数决策失误的根源。",
+  content:`<p>系统1是默认的"省电模式"。真正要练的不是"永远理性"，而是识别什么时候该切到系统2：决策金额大、后果不可逆、或有人在带节奏的时候。我们对自己了解得越少，就越自信——这正是系统1的危险之处。</p>`,
+  related:["system1"]}
+],
+quizzes:[
+ [{q:"卡尼曼把大脑分成哪两个系统？",opts:["左脑和右脑","系统1（快/直觉）与系统2（慢/推理）","感性和理性","意识和潜意识"],a:1},
+  {q:"锚定效应指的是什么？",opts:["船抛锚固定","先出现的无关数字会污染后续判断","记忆力下降","注意力分散"],a:1},
+  {q:"峰终定律指什么？",opts:["记忆由高峰和结尾决定，而非全程平均","只记得开头","结尾最重要","高峰体验"],a:0}],
+ [{q:"可得性启发的风险是什么？",opts:["获取信息太慢","用"想不想得起来"代替"概率有多大"，扭曲判断","信息太多","记不住"],a:1},
+  {q:"系统2的特点是什么？",opts:["自动、不费力","需要主动调用注意力，费力，负责推理计算","靠直觉","是默认模式"],a:1},
+  {q:"什么时候应该切到系统2？",opts:["所有时候","决策金额大、后果不可逆、有人带节奏时","日常小事","吃饭时"],a:1}],
+ [{q:""我们对自己了解得越少，就越自信"说明了什么？",opts:["无知者无畏","系统1的过度自信是危险的","自信很重要","了解自己没用"],a:1},
+  {q:"大脑占体重2%却消耗多少能量？",opts:["5%","10%","20%","40%"],a:2},
+  {q:"系统1的本质是什么？",opts:["bug","进化出来的节能策略","错误的根源","需要被消灭"],a:1}]
+]}
+];
+
+// ============================================================
+// 全局状态
+// ============================================================
+let currentBook = null;
+let gameState = {level:0,question:0,correct:0,completed:[]};
+let graphInitializedFor = null;
+
+// ============================================================
+// 路由
+// ============================================================
+function navigate(){
+  const hash = location.hash || "#/";
+  document.querySelectorAll(".view").forEach(v=>v.classList.remove("active"));
+  document.getElementById("navLinks").innerHTML = "";
+
+  // 概念详情
+  const conceptMatch = hash.match(/^#\/book\/([\w-]+)\/concept\/([\w-]+)$/);
+  if(conceptMatch){
+    currentBook = BOOKS.find(b=>b.id===conceptMatch[1]);
+    renderConcept(conceptMatch[2]);
+    document.getElementById("view-concept").classList.add("active");
+    renderBookNav();
+    window.scrollTo(0,0);return;
+  }
+  // 书内子页
+  const subMatch = hash.match(/^#\/book\/([\w-]+)\/(index|graph|game)$/);
+  if(subMatch){
+    currentBook = BOOKS.find(b=>b.id===subMatch[1]);
+    if(subMatch[2]==="index"){renderIndex();document.getElementById("view-index").classList.add("active");}
+    else if(subMatch[2]==="graph"){renderGraph();document.getElementById("view-graph").classList.add("active");}
+    else if(subMatch[2]==="game"){initGame();document.getElementById("view-game").classList.add("active");}
+    renderBookNav();
+    window.scrollTo(0,0);return;
+  }
+  // 书首页
+  const bookMatch = hash.match(/^#\/book\/([\w-]+)$/);
+  if(bookMatch){
+    currentBook = BOOKS.find(b=>b.id===bookMatch[1]);
+    renderBookHome();
+    document.getElementById("view-book").classList.add("active");
+    renderBookNav();
+    window.scrollTo(0,0);return;
+  }
+  // 全局首页
+  renderHome();
+  document.getElementById("view-home").classList.add("active");
+  window.scrollTo(0,0);
+}
+window.addEventListener("hashchange",navigate);
+
+function renderBookNav(){
+  if(!currentBook)return;
+  const nav = document.getElementById("navLinks");
+  const sub = location.hash.split("/").slice(2).join("/") || "";
+  nav.innerHTML = `
+    <a href="#/" class="${sub===''?'active':''}">全部书籍</a>
+    <a href="#/book/${currentBook.id}" class="${sub===''?'active':''}">${currentBook.title}</a>
+    <a href="#/book/${currentBook.id}/index" class="${sub==='index'?'active':''}">概念索引</a>
+    <a href="#/book/${currentBook.id}/graph" class="${sub==='graph'?'active':''}">知识图谱</a>
+    <a href="#/book/${currentBook.id}/game" class="${sub==='game'?'active':''}">闯关游戏</a>`;
+}
+
+// ============================================================
+// 首页：书墙
+// ============================================================
+function renderHome(){
+  const totalConcepts = BOOKS.reduce((s,b)=>s+b.concepts.length,0);
+  const totalQuizzes = BOOKS.reduce((s,b)=>s+b.quizzes.reduce((a,q)=>a+q.length,0),0);
+  const totalLinks = BOOKS.reduce((s,b)=>s+b.concepts.reduce((a,c)=>a+c.links,0),0);
+  document.getElementById("homeContent").innerHTML = `
+    <div class="hero">
+      <div class="hero-eyebrow">读书笔记互动平台</div>
+      <h1>把读书笔记变成<em>可以玩的知识花园</em></h1>
+      <p class="hero-sub">每一本书都被拆解成概念网络——可以浏览索引、探索图谱、闯关测试。不是被动阅读，是主动构建。</p>
+    </div>
+    <div class="stats-row">
+      <div class="stat"><div class="stat-num">${BOOKS.length}</div><div class="stat-label">本书籍</div></div>
+      <div class="stat"><div class="stat-num">${totalConcepts}</div><div class="stat-label">核心概念</div></div>
+      <div class="stat"><div class="stat-num">${totalLinks}</div><div class="stat-label">概念关联</div></div>
+      <div class="stat"><div class="stat-num">${totalQuizzes}<small> 题</small></div><div class="stat-label">闯关题目</div></div>
+    </div>
+    <h2 class="section-title">书籍</h2>
+    <p class="section-sub">点击任意书籍进入其概念体系</p>
+    <div class="book-grid">
+      ${BOOKS.map(b=>`
+        <div class="book-card" onclick="location.hash='#/book/${b.id}'">
+          <div class="bc-arrow">→</div>
+          <div class="bc-num">${b.num}</div>
+          <div class="bc-title">${b.title}</div>
+          <div class="bc-en">${b.en}</div>
+          <div class="bc-summary">${b.summary}</div>
+          <div class="bc-meta">
+            <span>${b.concepts.length} 概念</span>
+            <span>${b.quizzes.length} 关</span>
+            <span>${b.quizzes.reduce((a,q)=>a+q.length,0)} 题</span>
+          </div>
+        </div>`).join("")}
+    </div>`;
+}
+
+// ============================================================
+// 书首页
+// ============================================================
+function renderBookHome(){
+  const b = currentBook;
+  const totalQ = b.quizzes.reduce((a,q)=>a+q.length,0);
+  document.getElementById("bookContent").innerHTML = `
+    <div class="breadcrumb"><a href="#/">全部书籍</a> / ${b.title}</div>
+    <div class="book-hero">
+      <div class="bh-eyebrow">第 ${b.num} 本</div>
+      <h1>${b.title}</h1>
+      <div class="bh-sub">${b.summary}</div>
+    </div>
+    <div class="book-stats">
+      <div class="stat"><div class="stat-num">${b.concepts.length}</div><div class="stat-label">核心概念</div></div>
+      <div class="stat"><div class="stat-num">${b.concepts.reduce((a,c)=>a+c.links,0)}</div><div class="stat-label">概念关联</div></div>
+      <div class="stat"><div class="stat-num">${b.quizzes.length}<small> 关</small></div><div class="stat-label">闯关测试</div></div>
+      <div class="stat"><div class="stat-num">${totalQ}<small> 题</small></div><div class="stat-label">测试题目</div></div>
+    </div>
+    <h2 class="section-title">核心概念</h2>
+    <p class="section-sub">点击任意概念进入详情页</p>
+    ${renderConceptTableHtml(b.concepts)}`;
+}
+
+// ============================================================
+// 概念索引
+// ============================================================
+function renderIndex(){
+  const b = currentBook;
+  document.getElementById("indexContent").innerHTML = `
+    <div class="breadcrumb"><a href="#/">全部书籍</a> / <a href="#/book/${b.id}">${b.title}</a> / 概念索引</div>
+    <h1 style="font-family:var(--serif);font-size:38px;font-weight:600;margin-bottom:6px">全部概念</h1>
+    <p style="color:var(--ink-soft);font-size:14px;margin-bottom:24px">共 ${b.concepts.length} 个概念，按重要度和关联数浏览</p>
+    ${renderConceptTableHtml(b.concepts)}`;
+}
+
+function renderConceptTableHtml(concepts){
+  return `<table class="concept-table"><thead><tr><th>#</th><th>概念</th><th>类别</th><th>重要度</th><th>关联</th></tr></thead><tbody>` +
+    concepts.map((c,i)=>`<tr onclick="location.hash='#/book/${currentBook.id}/concept/${c.id}'" style="cursor:pointer">
+      <td class="c-num">${String(i+1).padStart(2,'0')}</td>
+      <td class="c-name">${c.name}<small>${c.en}</small></td>
+      <td class="c-cat">${catLabel(c.cat)}</td>
+      <td><span class="stars">${"★".repeat(c.stars)}${"☆".repeat(5-c.stars)}</span></td>
+      <td class="c-links">→ ${c.links}</td>
+    </tr>`).join("") + "</tbody></table>";
+}
+
+function catLabel(cat){
+  return {practice:"练习方法",feedback:"反馈机制",principle:"核心原理",concept:"概念"}[cat]||cat;
+}
+
+// ============================================================
+// 概念详情
+// ============================================================
+function renderConcept(cid){
+  const b = currentBook;
+  const c = b.concepts.find(x=>x.id===cid);
+  if(!c){location.hash=`#/book/${b.id}`;return}
+  const related = c.related.map(rid=>b.concepts.find(x=>x.id===rid)).filter(Boolean);
+  const idx = b.concepts.indexOf(c);
+  document.getElementById("conceptDetail").innerHTML = `
+    <div class="breadcrumb"><a href="#/">全部书籍</a> / <a href="#/book/${b.id}">${b.title}</a> / <a href="#/book/${b.id}/index">概念索引</a> / ${c.name}</div>
+    <div class="concept-meta">
+      <span class="tag tag-${c.cat}">${catLabel(c.cat)}</span>
+      <span class="meta-item">重要度 <strong>${"★".repeat(c.stars)}</strong></span>
+      <span class="meta-item">关联概念 <strong>${c.links}</strong></span>
+      <span class="meta-item">编号 <strong>${String(idx+1).padStart(2,'0')}</strong></span>
+    </div>
+    <h1>${c.name}</h1>
+    <div class="en-title">${c.en}</div>
+    <div class="concept-body">${c.content}</div>
+    <div class="related-section">
+      <h3>关联概念</h3>
+      <div class="related-cards">
+        ${related.map(r=>`<div class="related-card" onclick="location.hash='#/book/${b.id}/concept/${r.id}'">
+          <div class="rc-name">${r.name}</div><div class="rc-en">${r.en}</div>
+        </div>`).join("")}
+      </div>
+    </div>`;
+}
+
+// ============================================================
+// 知识图谱
+// ============================================================
+function renderGraph(){
+  const b = currentBook;
+  document.getElementById("graphContent").innerHTML = `
+    <div class="breadcrumb"><a href="#/">全部书籍</a> / <a href="#/book/${b.id}">${b.title}</a> / 知识图谱</div>
+    <h1 style="font-family:var(--serif);font-size:38px;font-weight:600;margin-bottom:6px">知识图谱</h1>
+    <p style="color:var(--ink-soft);font-size:14px;margin-bottom:20px">${b.concepts.length} 个节点 · ${b.concepts.reduce((a,c)=>a+c.links,0)} 条边。点击节点跳转详情。</p>
+    <div class="graph-container"><svg class="graph-svg" id="graphSvg"></svg></div>
+    <div class="graph-legend">
+      <div class="lg-item"><div class="lg-dot" style="background:var(--accent)"></div>练习方法</div>
+      <div class="lg-item"><div class="lg-dot" style="background:var(--sage)"></div>反馈机制</div>
+      <div class="lg-item"><div class="lg-dot" style="background:var(--lemon)"></div>核心原理</div>
+      <div class="lg-item"><div class="lg-dot" style="background:#7B5EA7"></div>概念</div>
+    </div>`;
+  drawGraph(b);
+}
+
+function drawGraph(b){
+  const svg = document.getElementById("graphSvg");
+  const W = svg.clientWidth || 800, H = 560;
+  svg.setAttribute("viewBox",`0 0 ${W} ${H}`);
+  const concepts = b.concepts;
+  const positions = {};
+  const cx=W/2, cy=H/2;
+  // 找关联最多的1-2个放中心
+  const sorted = [...concepts].sort((a,b)=>b.links-a.links);
+  const centerCount = concepts.length > 6 ? 2 : 1;
+  const centerIds = sorted.slice(0,centerCount).map(c=>c.id);
+  const outerIds = concepts.filter(c=>!centerIds.includes(c.id)).map(c=>c.id);
+  if(centerCount===1){positions[centerIds[0]]={x:cx,y:cy};}
+  else{centerIds.forEach((id,i)=>{positions[id]={x:cx-70+i*140,y:cy};});}
+  const r = Math.min(200, W*0.32);
+  outerIds.forEach((id,i)=>{
+    const angle = (i/outerIds.length)*Math.PI*2 - Math.PI/2;
+    positions[id]={x:cx+Math.cos(angle)*r,y:cy+Math.sin(angle)*r*0.82};
+  });
+  const catColor = {practice:"#E8652A",feedback:"#4A9E5C",principle:"#E8B923",concept:"#7B5EA7"};
+  let edgesHtml="";const drawn=new Set();
+  concepts.forEach(c=>{
+    c.related.forEach(rid=>{
+      const key=[c.id,rid].sort().join("-");
+      if(drawn.has(key))return;drawn.add(key);
+      const p1=positions[c.id],p2=positions[rid];
+      if(p1&&p2) edgesHtml+=`<line class="graph-edge" x1="${p1.x}" y1="${p1.y}" x2="${p2.x}" y2="${p2.y}"/>`;
+    });
+  });
+  let nodesHtml="";
+  concepts.forEach((c,i)=>{
+    const p=positions[c.id];if(!p)return;
+    nodesHtml+=`<g class="graph-node" onclick="location.hash='#/book/${b.id}/concept/${c.id}'" transform="translate(${p.x},${p.y})">
+      <circle r="30" fill="${catColor[c.cat]||'#999'}" stroke="#fff" stroke-width="3" opacity="0.92"/>
+      <text dy="-3">${String(i+1).padStart(2,'0')}</text>
+      <text dy="11" style="font-size:9px;font-weight:500">${c.name.length>4?c.name.slice(0,4):c.name}</text>
+    </g>`;
+  });
+  svg.innerHTML = edgesHtml + nodesHtml;
+}
+
+// ============================================================
+// 闯关游戏
+// ============================================================
+function initGame(){
+  gameState = {level:0,question:0,correct:0,completed:[]};
+  renderGame();
+}
+function renderGame(){
+  const b = currentBook;
+  renderProgress(b);
+  const content = document.getElementById("gameContent");
+  if(gameState.level >= b.quizzes.length){
+    content.innerHTML = renderVictory(b);return;
+  }
+  const quiz = b.quizzes[gameState.level];
+  const q = quiz[gameState.question];
+  content.innerHTML = `
+    <div class="breadcrumb"><a href="#/">全部书籍</a> / <a href="#/book/${b.id}">${b.title}</a> / 闯关游戏</div>
+    <div class="game-header"><h2>概念闯关</h2><p>读完一页，做对题，点亮知识地图。${b.quizzes.length}关 ${b.quizzes.reduce((a,q)=>a+q.length,0)}题，全对通关。</p></div>
+    <div class="quiz-card">
+      <div class="q-num">第 ${gameState.level+1} 关 · 第 ${gameState.question+1}/${quiz.length} 题</div>
+      <div class="q-text">${q.q}</div>
+      <div class="quiz-options" id="quizOptions">
+        ${q.opts.map((o,i)=>`<button class="quiz-option" data-i="${i}">${o}</button>`).join("")}
+      </div>
+      <div class="quiz-feedback" id="quizFeedback"></div>
+      <div class="quiz-next" id="quizNext" style="display:none">
+        <button class="btn btn-primary" onclick="nextQuestion()">下一题 →</button>
+      </div>
+    </div>`;
+  document.querySelectorAll(".quiz-option").forEach(btn=>{
+    btn.onclick = ()=>{
+      const i=+btn.dataset.i;const all=document.querySelectorAll(".quiz-option");
+      all.forEach(x=>x.disabled=true);
+      const fb=document.getElementById("quizFeedback");
+      if(i===q.a){btn.classList.add("right");fb.className="quiz-feedback show good";fb.textContent="✓ 答对了！提取练习生效。";gameState.correct++;}
+      else{btn.classList.add("wrong");all[q.a].classList.add("right");fb.className="quiz-feedback show bad";fb.textContent="✗ 正确答案："+q.opts[q.a];}
+      document.getElementById("quizNext").style.display="block";
+    };
+  });
+}
+function nextQuestion(){
+  const b=currentBook;
+  gameState.question++;
+  if(gameState.question>=b.quizzes[gameState.level].length){
+    gameState.completed.push(gameState.level);
+    gameState.level++;gameState.question=0;
+  }
+  renderGame();
+}
+function renderProgress(b){
+  let html=`<div class="progress-track">`;
+  for(let i=0;i<b.quizzes.length;i++){
+    if(i>0) html+=`<div class="progress-line ${gameState.completed.includes(i-1)?'completed':''}"></div>`;
+    let cls="progress-node";
+    if(gameState.completed.includes(i))cls+=" completed";
+    else if(i===gameState.level)cls+=" current";
+    else if(i<gameState.level)cls+=" unlocked";
+    html+=`<div class="${cls}">${gameState.completed.includes(i)?'✓':i+1}</div>`;
+  }
+  html+=`</div>`;
+  // 进度条放在 gameContent 里由 renderGame 输出，这里不单独操作 DOM
+}
+function renderVictory(b){
+  const totalQ = b.quizzes.reduce((a,q)=>a+q.length,0);
+  return `
+    <div class="breadcrumb"><a href="#/">全部书籍</a> / <a href="#/book/${b.id}">${b.title}</a> / 闯关游戏</div>
+    <div class="victory"><h2>🎉 通关！</h2><p>你答对了 ${gameState.correct} / ${totalQ} 题。《${b.title}》的知识地图全部点亮。</p></div>
+    <div class="knowledge-map">
+      ${b.concepts.map(c=>`<div class="km-node lit" onclick="location.hash='#/book/${b.id}/concept/${c.id}'">
+        <div class="km-icon">${c.cat==='practice'?'🧠':c.cat==='feedback'?'💬':'⚡'}</div>
+        <div class="km-label">${c.name}</div>
+      </div>`).join("")}
+    </div>
+    <div style="text-align:center;margin-top:28px">
+      <a href="#/book/${b.id}" class="btn btn-primary">回到本书</a>
+      <a href="#/book/${b.id}/graph" class="btn btn-ghost" style="margin-left:10px">查看知识图谱</a>
+      <a href="#/" class="btn btn-ghost" style="margin-left:10px">全部书籍</a>
+    </div>`;
+}
+
+// ============================================================
+// 全局搜索
+// ============================================================
+const searchInput = document.getElementById("searchInput");
+const searchResults = document.getElementById("searchResults");
+searchInput.addEventListener("input",()=>{
+  const q = searchInput.value.trim().toLowerCase();
+  if(!q){searchResults.classList.remove("show");return}
+  const matches = [];
+  BOOKS.forEach(b=>{
+    b.concepts.forEach(c=>{
+      if(c.name.toLowerCase().includes(q)||c.en.toLowerCase().includes(q)||c.summary.toLowerCase().includes(q)){
+        matches.push({book:b,concept:c});
+      }
+    });
+  });
+  if(!matches.length){searchResults.innerHTML='<a style="color:var(--ink-faint)">未找到相关概念</a>';}
+  else{
+    searchResults.innerHTML = matches.slice(0,8).map(m=>
+      `<a href="#/book/${m.book.id}/concept/${m.concept.id}"><div class="sr-title">${m.concept.name} <span style="color:var(--ink-faint);font-weight:400">${m.concept.en}</span></div><div class="sr-sub">${m.book.title} · ${m.concept.summary.slice(0,40)}…</div></a>`
+    ).join("");
+  }
+  searchResults.classList.add("show");
+});
+document.addEventListener("click",e=>{if(!e.target.closest(".search-box"))searchResults.classList.remove("show");});
+
+// ============================================================
+// 初始化
+// ============================================================
+navigate();
+</script>
+</body>
+</html>
